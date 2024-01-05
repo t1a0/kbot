@@ -1,16 +1,20 @@
 /*
 Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
+	"fmt"
 	"os"
-
+	"time"
+	"log"
 	"github.com/spf13/cobra"
+	telebot "gopkg.in/telebot.v3"
 )
 
-
+var (
+	TeleToken = os.Getenv("TELE_TOKEN")
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -22,13 +26,28 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(cmd *cobra.Command, args []string) {
+
+		fmt.Printf("kbot is started", appVersion)
+		kbot, err := telebot.NewBot(telebot.Settings{
+			URL:    "",
+			Token:  TeleToken,
+			Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
+		})
+		if err != nil {
+			log.Fatalf("Please check TELE_TOKEN env variable %s", err)
+			return
+		}
+		kbot.Handle(telebot.OnText, func(m telebot.Context) error {
+
+			log.Print(m.Message().Payload, m.Text())
+
+			return err
+		})
+		kbot.Start()
+	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -47,5 +66,3 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-
